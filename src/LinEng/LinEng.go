@@ -5,7 +5,7 @@ package LinEng
 import "fmt"
 import "unsafe"
 
-//normalize the data, O(N'2)
+//normalize the data, O(NH)
 func NormalCalc(x [][]float32) [][]float32 {
 	var avg, sumt, sd float32 = 0, 0, 0
 	var out = make([][]float32, len(x))
@@ -41,7 +41,7 @@ func NormalCalc(x [][]float32) [][]float32 {
 	return out
 }
 
-//scale the input matrix to range [(0,0), (1,1), O(N'2)
+//scale the input matrix to range [(0,0), (1,1), O(NH)
 func OneScaleCalc(x [][]float32) [][]float32 {
 	var min, max float32 = 999, -999
 	var out = make([][]float32, len(x))
@@ -68,8 +68,6 @@ func OneScaleCalc(x [][]float32) [][]float32 {
 
 	for i := 0; i < len(x); i++ {
 		for j := 0; j < len(x[0]); j++ {
-			fmt.Println("i", i)
-			fmt.Println("j", j)
 			out[i][j] = (x[i][j] - min) / max
 		}
 	}
@@ -93,8 +91,10 @@ func CovCalc(x [][]float32) [][]float32 {
 			quickSum += x[i][j]
 		}
 
-		yAvg[j] = quickSum
+		yAvg[j] = quickSum / float32(len(x))
 	}
+
+	fmt.Println(yAvg)
 
 	for i := 0; i < len(x); i++ {
 		var quickSum float32 = 0
@@ -103,9 +103,24 @@ func CovCalc(x [][]float32) [][]float32 {
 			quickSum += x[i][j]
 		}
 
+		quickSum = quickSum / float32(len(x[0]))
+
 		//might want to divide by n - 1 but probably not
 		for j := 0; j < len(x[0]); j++ {
 			out[i][j] = (x[i][j] - quickSum) * (x[i][j] - yAvg[j])
+		}
+	}
+
+	return out
+}
+
+//flips, O(NH)
+func Flip(x [][]float32) [][]float32 {
+	var out = make([][]float32, len(x[0]))
+	for i := 0; i < len(x[0]); i++ {
+		out[i] = make([]float32, len(x))
+		for j := 0; j < len(x); j++ {
+			out[i][j] = x[j][i]
 		}
 	}
 
@@ -118,6 +133,7 @@ func FastInvSqrt(x float32) float32 {
 	i := *(*int32)(unsafe.Pointer(&x))
 	i = int32(0x5f3759df) - int32(i>>1)
 	x = *(*float32)(unsafe.Pointer(&i))
+
 	x = x * (1.5 - (xhalf * x * x))
 	return x
 }
