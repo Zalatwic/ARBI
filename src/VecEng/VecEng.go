@@ -22,5 +22,4 @@ func CallPrince(x [][]float32) []float32 {
 			}
 		}
 	}
-
 }
